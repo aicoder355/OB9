@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    env_file: .env
+    environment:
+      - RUN_MODE=web
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app:cached
+      - ./media:/app/media
+    depends_on:
+      - db
+
+  bot:
+    build: .
+    env_file: .env
+    environment:
+      - RUN_MODE=bot
+    volumes:
+      - .:/app:cached
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: water_delivery
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

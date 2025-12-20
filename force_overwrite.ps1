@@ -1,0 +1,594 @@
+$driversPath = "templates\drivers.html"
+$clientsPath = "templates\clients.html"
+
+$driversContent = @"
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-6">
+    <!-- Отображение сообщений -->
+    <div id="messages-container">
+        {% if messages %}
+        <div class="bg-gray-100 p-4 rounded-lg messages">
+            {% for message in messages %}
+            <p
+                class="{% if message.tags == 'success' %}text-green-800{% elif message.tags == 'error' %}text-red-800{% elif message.tags == 'warning' %}text-yellow-800{% endif %}">
+                {{ message }}
+            </p>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="flex flex-col sm:flex-row justify-between items-center">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-0">Водители</h2>
+        {% if can_add_driver %}
+        <button onclick="showForm('driver-form', null)"
+            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Добавить водителя</button>
+        {% endif %}
+    </div>
+    {% if can_add_driver %}
+    <div id="driver-form" class="bg-white rounded-lg shadow p-4 hidden">
+        <h3 class="text-base sm:text-lg font-medium mb-4" id="driver-form-title">Новый водитель</h3>
+        <form id="driver-form-element" method="post" action="{% url 'create_driver' %}">
+            {% csrf_token %}
+            <input type="hidden" name="driver_id" id="driver-id">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Имя</label>
+                    <input type="text" name="name" required class="mt-1 block w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Телефон</label>
+                    <input type="text" name="phone" required class="mt-1 block w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" name="email" class="mt-1 block w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Регион</label>
+                    <select name="region" class="mt-1 block w-full border rounded-lg px-3 py-2">
+                        <option value="">Не указан</option>
+                        {% for region in regions %}
+                        <option value="{{ region.id }}">{{ region.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-2">
+                <button type="submit"
+                    class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Сохранить</button>
+                <button type="button" onclick="document.getElementById('driver-form').classList.add('hidden')"
+                    class="text-gray-500 hover:text-gray-700">Отмена</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="mb-4">
+            <input type="text" id="driver-search" placeholder="Поиск по имени или телефону..."
+                class="flex-1 border rounded-lg px-4 py-2 w-full">
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                        <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Имя</th>
+                        <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Телефон</th>
+                        <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                        <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Регион</th>
+                        <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Telegram
+                        </th>
+                        <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Дата
+                            создания</th>
+                        <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Действия
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="driver-table-body" class="divide-y divide-gray-200">
+                    {% for driver in page_obj %}
+                    <tr>
+                        <td class="px-2 sm:px-4 py-2 text-sm">{{ driver.id }}</td>
+                        <td class="px-2 sm:px-4 py-2 text-sm">{{ driver.name }}</td>
+                        <td class="px-2 sm:px-4 py-2 text-sm">{{ driver.phone }}</td>
+                        <td class="px-2 sm:px-4 py-2 text-sm">{{ driver.email|default:"—" }}</td>
+                        <td class="px-2 sm:px-4 py-2 text-sm">
+                            {% if driver.region %}
+                            {{ driver.region.name }}
+                            {% else %}
+                            Не указан
+                            {% endif %}
+                        </td>
+                        <td class="px-2 sm:px-4 py-2 text-sm">
+                            {% if driver.telegram_verified %}
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">✓ Подключён</span>
+                            {% elif driver.access_code %}
+                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Код создан</span>
+                            {% else %}
+                            <span class="text-gray-400 text-xs">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-2 sm:px-4 py-2 text-sm">{{ driver.created_at|date:"d.m.Y H:i" }}</td>
+                        <td class="px-2 sm:px-4 py-2 text-sm space-x-2">
+                            {% if can_change_driver and not driver.telegram_verified %}
+                            <a href="{% url 'generate_driver_code_web' driver.id %}"
+                                class="text-purple-600 hover:underline" title="Сгенерировать код доступа">🔑 Код</a>
+                            {% endif %}
+                            {% if can_change_driver %}
+                            <button
+                                onclick="editDriver({{ driver.id }}, '{{ driver.name|escapejs }}', '{{ driver.phone|escapejs }}', '{{ driver.email|escapejs }}', {% if driver.region %}'{{ driver.region.id }}'{% else %}''{% endif %})"
+                                class="text-blue-500 hover:underline">Редактировать</button>
+                            {% endif %}
+                            {% if can_delete_driver %}
+                            <button onclick="showDeleteModal('{% url 'delete_driver' driver.id %}')"
+                                class="text-red-500 hover:underline">Удалить</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="px-2 sm:px-4 py-2 text-center text-gray-500">Нет водителей</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-4 flex flex-col sm:flex-row justify-between items-center">
+            <div class="mb-2 sm:mb-0">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                    class="px-4 py-2 text-blue-500 hover:underline">Назад</a>
+                {% endif %}
+            </div>
+            <div class="space-x-2 mb-2 sm:mb-0">
+                {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                <span class="px-4 py-2 bg-blue-500 text-white rounded-lg">{{ num }}</span>
+                {% else %}
+                <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                    class="px-4 py-2 text-blue-500 hover:underline">{{ num }}</a>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <div>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                    class="px-4 py-2 text-blue-500 hover:underline">Вперёд</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function showForm(formId, driverId) {
+        const form = document.getElementById(formId);
+        const formElement = document.getElementById('driver-form-element');
+        const title = document.getElementById('driver-form-title');
+        form.classList.remove('hidden');
+        if (driverId) {
+            formElement.action = '{% url "edit_driver" %}';
+            title.textContent = 'Редактировать водителя';
+            document.getElementById('driver-id').value = driverId;
+        } else {
+            formElement.action = '{% url "create_driver" %}';
+            title.textContent = 'Новый водитель';
+            document.getElementById('driver-id').value = '';
+            formElement.reset();
+        }
+    }
+
+    function editDriver(id, name, phone, email, regionId) {
+        showForm('driver-form', id);
+        const form = document.getElementById('driver-form-element');
+        form.querySelector('[name="name"]').value = name;
+        form.querySelector('[name="phone"]').value = phone;
+        form.querySelector('[name="email"]').value = email;
+        form.querySelector('[name="region"]').value = regionId || '';
+    }
+
+    document.getElementById('driver-search').addEventListener('input', function (e) {
+        const query = e.target.value;
+        fetch(`/api/drivers/?search=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('driver-table-body');
+                tbody.innerHTML = '';
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="px-2 sm:px-4 py-2 text-center text-gray-500">Нет водителей</td></tr>';
+                    return;
+                }
+                const canChangeDriver = {{ can_change_driver|yesno:"true,false" }};
+                const canDeleteDriver = {{ can_delete_driver|yesno:"true,false" }};
+    data.forEach(driver => {
+        const row = document.createElement('tr');
+        let actions = '';
+        if (canChangeDriver) {
+            actions += `<button onclick="editDriver(${driver.id}, '${driver.name.replace(/'/g, "\\'")}', '${driver.phone.replace(/'/g, "\\'")}', '${driver.email.replace(/'/g, "\\'")}', '${driver.region?.id || ''}')" class="text-blue-500 hover:underline">Редактировать</button>`;
+        }
+        if (canDeleteDriver) {
+            actions += `<button onclick="showDeleteModal('/delete-driver/${driver.id}/')" class="text-red-500 hover:underline">Удалить</button>`;
+        }
+        row.innerHTML = `
+                        <td class="px-2 sm:px-4 py-2 text-sm">${driver.id}</td>
+                        <td class="px-2 sm:px-4 py-2 text-sm">${driver.name}</td>
+                        <td class="px-2 sm:px-4 py-2 text-sm">${driver.phone}</td>
+                        <td class="px-2 sm:px-4 py-2 text-sm">${driver.email || '—'}</td>
+                        <td class="px-2 sm:px-4 py-2 text-sm">${driver.region?.name || 'Не указан'}</td>
+                        <td class="px-2 sm:px-4 py-2 text-sm">${new Date(driver.created_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                        <td class="px-2 sm:px-4 py-2 text-sm space-x-2">${actions}</td>
+                    `;
+        tbody.appendChild(row);
+    });
+            });
+    });
+</script>
+{% endblock %}
+"@
+
+$clientsContent = @"
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-6">
+    <!-- Отображение сообщений -->
+    <div id="messages-container">
+        {% if messages %}
+        <div class="bg-gray-100 p-4 rounded-lg messages">
+            {% for message in messages %}
+            <p
+                class="{% if message.tags == 'success' %}text-green-800{% elif message.tags == 'error' %}text-red-800{% elif message.tags == 'warning' %}text-yellow-800{% endif %}">
+                {{ message }}
+            </p>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="flex flex-col sm:flex-row justify-between items-center">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-0">Клиенты</h2>
+        {% if can_add_client %}
+        <button onclick="showForm('client-form', null)"
+            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Добавить клиента</button>
+        {% endif %}
+    </div>
+    {% if can_add_client %}
+    <div id="client-form" class="bg-white rounded-lg shadow p-4 hidden">
+        <h3 class="text-base sm:text-lg font-medium mb-4" id="client-form-title">Новый клиент</h3>
+        <form id="client-form-element" method="post" action="{% url 'create_client' %}">
+            {% csrf_token %}
+            <input type="hidden" name="client_id" id="client-id">
+
+            <!-- Тип клиента -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Тип клиента</label>
+                <div class="flex gap-4">
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="client_type" value="individual" checked
+                            class="form-radio text-blue-600" onchange="toggleClientType(this)">
+                        <span class="ml-2">Физическое лицо</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="client_type" value="business" class="form-radio text-blue-600"
+                            onchange="toggleClientType(this)">
+                        <span class="ml-2">Юридическое лицо</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Основная информация -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Имя</label>
+                    <input type="text" name="name" required class="mt-1 block w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Телефон</label>
+                    <input type="text" name="phone" required placeholder="+992XXXXXXXXX" pattern="^(\+?992\d{9}|\d{9})$"
+                        title="Формат: +992XXXXXXXXX или 992XXXXXXXXX или XXXXXXXXX" class="mt-1 block w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" name="email" class="mt-1 block w-full border rounded-lg px-3 py-2">
+                </div>
+
+                <!-- Поля для юридических лиц -->
+                <div id="business-fields" class="hidden sm:col-span-2 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Название компании</label>
+                        <input type="text" name="company_name" class="mt-1 block w-full border rounded-lg px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">ИНН</label>
+                        <input type="text" name="tax_number" class="mt-1 block w-full border rounded-lg px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Контактное лицо</label>
+                        <input type="text" name="contact_person" class="mt-1 block w-full border rounded-lg px-3 py-2">
+                    </div>
+                </div>
+
+                <!-- Адрес -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Адрес</label>
+                    <input type="text" name="address" required class="mt-1 block w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Квартира/Офис</label>
+                    <input type="text" name="apartment" class="mt-1 block w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Этаж</label>
+                    <input type="number" name="floor" class="mt-1 block w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Подъезд</label>
+                    <input type="text" name="entrance" class="mt-1 block w-full border rounded-lg px-3 py-2">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Регион</label>
+                    <select name="region" class="mt-1 block w-full border rounded-lg px-3 py-2">
+                        <option value="">Не указан</option>
+                        {% for region in regions %}
+                        <option value="{{ region.id }}">{{ region.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Примечания</label>
+                    <textarea name="notes" rows="3" class="mt-1 block w-full border rounded-lg px-3 py-2"></textarea>
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-2">
+                <button type="submit"
+                    class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Сохранить</button>
+                <button type="button" onclick="hideForm('client-form')"
+                    class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">Отмена</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-4">
+            <div class="mb-4">
+                <input type="text" id="client-search" placeholder="Поиск клиентов..."
+                    class="w-full sm:w-64 border rounded-lg px-3 py-2">
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Тип</th>
+                            <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                Имя/Компания</th>
+                            <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Телефон
+                            </th>
+                            <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email
+                            </th>
+                            <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Адрес
+                            </th>
+                            <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Регион
+                            </th>
+                            <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Telegram
+                            </th>
+                            <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Баллы
+                            </th>
+                            <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                Категория</th>
+                            <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Действия
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="client-table-body" class="divide-y divide-gray-200">
+                        {% for client in page_obj %}
+                        <tr>
+                            <td class="px-2 sm:px-4 py-2 text-sm">
+                                {% if client.client_type == 'business' %}
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Юр. лицо</span>
+                                {% else %}
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Физ.
+                                    лицо</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-2 sm:px-4 py-2 text-sm">
+                                {% if client.client_type == 'business' %}
+                                {{ client.company_name }}<br>
+                                <span class="text-gray-500 text-xs">{{ client.contact_person }}</span>
+                                {% else %}
+                                {{ client.name }}
+                                {% endif %}
+                            </td>
+                            <td class="px-2 sm:px-4 py-2 text-sm">{{ client.phone }}</td>
+                            <td class="px-2 sm:px-4 py-2 text-sm">{{ client.email|default:"-" }}</td>
+                            <td class="px-2 sm:px-4 py-2 text-sm">{{ client.address }}</td>
+                            <td class="px-2 sm:px-4 py-2 text-sm">{{ client.region.name|default:"Не указан" }}</td>
+                            <td class="px-2 sm:px-4 py-2 text-sm">
+                                {% if client.telegram_chat_id %}
+                                {% if client.registration_status == 'pending' %}
+                                <span
+                                    class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Ожидает</span>
+                                {% elif client.registration_status == 'approved' %}
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">✓
+                                    Подтверждён</span>
+                                {% elif client.registration_status == 'rejected' %}
+                                <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">✗ Отклонён</span>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-gray-400 text-xs">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-2 sm:px-4 py-2 text-sm">
+                                <span
+                                    class="font-medium {% if client.loyalty_points > 0 %}text-green-600{% else %}text-gray-600{% endif %}">
+                                    {{ client.loyalty_points|floatformat:0 }}
+                                </span>
+                            </td>
+                            <td class="px-2 sm:px-4 py-2 text-sm">
+                                {% if client.category %}
+                                <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">
+                                    {{ client.category.name }}
+                                </span>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td class="px-2 sm:px-4 py-2 text-sm space-x-2">
+                                {% if client.registration_status == 'pending' and can_change_client %}
+                                <a href="{% url 'approve_client' client.id %}" class="text-green-600 hover:underline"
+                                    title="Подтвердить регистрацию">✓ Подтвердить</a>
+                                <a href="{% url 'reject_client' client.id %}" class="text-red-600 hover:underline"
+                                    title="Отклонить регистрацию">✗ Отклонить</a>
+                                {% endif %}
+                                {% if can_change_client %}
+                                <button
+                                    onclick="editClient({{ client.id }}, '{{ client.name|escapejs }}', '{{ client.phone|escapejs }}', '{{ client.email|escapejs }}', '{{ client.address|escapejs }}', '{{ client.apartment|escapejs }}', {{ client.floor|default:'null' }}, '{{ client.entrance|escapejs }}', {% if client.region %}'{{ client.region.id }}'{% else %}''{% endif %}, '{{ client.notes|escapejs }}', '{{ client.client_type }}', '{{ client.company_name|default:''|escapejs }}', '{{ client.tax_number|default:''|escapejs }}', '{{ client.contact_person|default:''|escapejs }}')"
+                                    class="text-blue-500 hover:underline">Редактировать</button>
+                                {% endif %}
+                                {% if can_delete_client %}
+                                <button onclick="showDeleteModal('{% url 'delete_client' client.id %}')"
+                                    class="text-red-500 hover:underline">Удалить</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="px-2 sm:px-4 py-2 text-center text-gray-500">Нет клиентов</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="mt-4 flex flex-col sm:flex-row justify-between items-center">
+            <div class="mb-2 sm:mb-0">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                    class="px-4 py-2 text-blue-500 hover:underline">Назад</a>
+                {% endif %}
+            </div>
+            <div class="space-x-2 mb-2 sm:mb-0">
+                {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                <span class="px-4 py-2 bg-blue-500 text-white rounded-lg">{{ num }}</span>
+                {% else %}
+                <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                    class="px-4 py-2 text-blue-500 hover:underline">{{ num }}</a>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <div>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                    class="px-4 py-2 text-blue-500 hover:underline">Вперёд</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript для управления формой -->
+<script>
+    function toggleClientType(radio) {
+        const businessFields = document.getElementById('business-fields');
+        if (radio.value === 'business') {
+            businessFields.classList.remove('hidden');
+        } else {
+            businessFields.classList.add('hidden');
+        }
+    }
+
+    function showForm(formId, clientId) {
+        const form = document.getElementById(formId);
+        const formElement = document.getElementById('client-form-element');
+        const title = document.getElementById('client-form-title');
+        form.classList.remove('hidden');
+        if (clientId) {
+            formElement.action = '{% url "edit_client" %}';
+            title.textContent = 'Редактировать клиента';
+            document.getElementById('client-id').value = clientId;
+        } else {
+            formElement.action = '{% url "create_client" %}';
+            title.textContent = 'Новый клиент';
+            document.getElementById('client-id').value = '';
+            formElement.reset();
+        }
+    }
+
+    function editClient(id, name, phone, email, address, apartment, floor, entrance, regionId, notes,
+        clientType, companyName, taxNumber, contactPerson) {
+        showForm('client-form', id);
+        const form = document.getElementById('client-form-element');
+
+        // Установка типа клиента
+        form.querySelector(`input[name="client_type"][value="${clientType}"]`).checked = true;
+        toggleClientType(form.querySelector(`input[name="client_type"][value="${clientType}"]`));
+
+        // Заполнение основных полей
+        form.querySelector('[name="name"]').value = name;
+        form.querySelector('[name="phone"]').value = phone;
+        form.querySelector('[name="email"]').value = email;
+        form.querySelector('[name="address"]').value = address;
+        form.querySelector('[name="apartment"]').value = apartment;
+        form.querySelector('[name="floor"]').value = floor || '';
+        form.querySelector('[name="entrance"]').value = entrance;
+        form.querySelector('[name="region"]').value = regionId;
+        form.querySelector('[name="notes"]').value = notes;
+
+        // Заполнение полей для юридического лица
+        form.querySelector('[name="company_name"]').value = companyName;
+        form.querySelector('[name="tax_number"]').value = taxNumber;
+        form.querySelector('[name="contact_person"]').value = contactPerson;
+    }
+
+    document.getElementById('client-search').addEventListener('input', function (e) {
+        const query = e.target.value;
+        fetch(`/api/clients/?search=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('client-table-body');
+                tbody.innerHTML = '';
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="px-2 sm:px-4 py-2 text-center text-gray-500">Нет клиентов</td></tr>';
+                    return;
+                }
+                const canChangeClient = {{ can_change_client|yesno:"true,false" }};
+                const canDeleteClient = {{ can_delete_client|yesno:"true,false" }};
+    data.forEach(client => {
+        const row = document.createElement('tr');
+        let actions = '';
+        if (canChangeClient) {
+            actions += `<button onclick="editClient(${client.id}, '${client.name}', '${client.phone}', '${client.email}', '${client.address}', '${client.apartment}', '${client.floor}', '${client.entrance}', '${client.region ? client.region.id : ''}', '${client.notes}', '${client.client_type}', '${client.company_name || ''}', '${client.tax_number || ''}', '${client.contact_person || ''}')" class="text-blue-500 hover:underline">Редактировать</button>`;
+        }
+        if (canDeleteClient) {
+            actions += `<button onclick="showDeleteModal('/delete-client/${client.id}/')" class="text-red-500 hover:underline">Удалить</button>`;
+        }
+        row.innerHTML = `
+                    <td class="px-2 sm:px-4 py-2 text-sm">
+                        ${client.client_type === 'business' ? '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Юр. лицо</span>' : '<span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Физ. лицо</span>'}
+                    </td>
+                    <td class="px-2 sm:px-4 py-2 text-sm">
+                        ${client.client_type === 'business' ? `${client.company_name}<br><span class="text-gray-500 text-xs">${client.contact_person}</span>` : client.name}
+                    </td>
+                    <td class="px-2 sm:px-4 py-2 text-sm">${client.phone}</td>
+                    <td class="px-2 sm:px-4 py-2 text-sm">${client.email || '-'}</td>
+                    <td class="px-2 sm:px-4 py-2 text-sm">${client.address}</td>
+                    <td class="px-2 sm:px-4 py-2 text-sm">${client.region ? client.region.name : 'Не указан'}</td>
+                    <td class="px-2 sm:px-4 py-2 text-sm">
+                        <span class="font-medium ${client.loyalty_points > 0 ? 'text-green-600' : 'text-gray-600'}">
+                            ${client.loyalty_points.toFixed(0)}
+                        </span>
+                    </td>
+                    <td class="px-2 sm:px-4 py-2 text-sm">
+                        ${client.category ? `<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">${client.category.name}</span>` : '-'}
+                    </td>
+                    <td class="px-2 sm:px-4 py-2 text-sm space-x-2">${actions}</td>
+                `;
+        tbody.appendChild(row);
+    });
+        });
+});
+</script>
+{% endblock %}
+"@
+
+[System.IO.File]::WriteAllText($driversPath, $driversContent, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($clientsPath, $clientsContent, [System.Text.Encoding]::UTF8)

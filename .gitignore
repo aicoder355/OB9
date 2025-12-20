@@ -1,0 +1,32 @@
+__pycache__/
+*.pyc
+.env
+db.sqlite3
+staticfiles/
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Media and uploads
+media/
+
+# Editor and OS files
+.vscode/
+.idea/
+*.log
+
+# Python cache
+__pycache__/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
