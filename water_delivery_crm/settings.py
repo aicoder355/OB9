@@ -14,6 +14,8 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 from urllib.parse import urlparse
+import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,15 +28,24 @@ if env_path.exists():
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-your-secret-key-here')
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes')
+# Default to False unless explicitly enabled in env
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('1', 'true', 'yes')
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    if DEBUG:
+        # development fallback key (only allowed in DEBUG)
+        SECRET_KEY = 'django-insecure-dev-key'
+    else:
+        raise ImproperlyConfigured('DJANGO_SECRET_KEY environment variable is required in production')
 
 # Hosts (comma-separated in env, e.g. "example.com,localhost")
 raw_allowed = os.environ.get('ALLOWED_HOSTS', '')
 ALLOWED_HOSTS = [h.strip() for h in raw_allowed.split(',') if h.strip()] if raw_allowed else []
+if not ALLOWED_HOSTS and not DEBUG:
+    raise ImproperlyConfigured('ALLOWED_HOSTS must be set in the environment for production')
 
 # Application definition
 
@@ -51,6 +62,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -95,17 +107,8 @@ DATABASES = {
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
     try:
-        url = urlparse(DATABASE_URL)
-        # url.path contains leading '/dbname'
-        db_name = url.path[1:]
-        DATABASES['default'] = {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': db_name,
-            'USER': url.username or '',
-            'PASSWORD': url.password or '',
-            'HOST': url.hostname or '',
-            'PORT': url.port or '',
-        }
+        # Use dj_database_url for robust parsing and connection pooling
+        DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     except Exception:
         # If parsing fails, keep default sqlite and log a simple message to stdout
         print('Invalid DATABASE_URL provided; falling back to sqlite3')
@@ -148,6 +151,9 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static'
 ]
 
+# Use WhiteNoise storage for static files in production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # Media files (User uploaded files)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -180,3 +186,25 @@ TELEGRAM_ADMIN_CHAT_IDS = [
 
 # Driver access code expiry time in hours
 DRIVER_CODE_EXPIRY_HOURS = int(os.environ.get('DRIVER_CODE_EXPIRY_HOURS', '24'))
+
+# Security settings for production
+# Respect proxy SSL header when behind a proxy (Railway sets X-Forwarded-Proto)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Redirect HTTP to HTTPS in production
+SECURE_SSL_REDIRECT = not DEBUG
+
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
+# HSTS (set to two years) when running in production
+SECURE_HSTS_SECONDS = 63072000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
+
+X_FRAME_OPTIONS = 'DENY'
+
+# Optional: CSRF trusted origins via env (comma-separated, include https://)
+raw_csrf = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+if raw_csrf:
+    CSRF_TRUSTED_ORIGINS = [u.strip() for u in raw_csrf.split(',') if u.strip()]

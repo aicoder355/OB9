@@ -1,0 +1,161 @@
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:.dockerignore[m
+[32m2[m[36m:[m.[1;31mvenv[m/
+[32m3[m[36m:[m[1;31mvenv[m/
+[32m8[m[36m:[m[1;31m.env[m
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:.env.example[m
+[32m1[m[36m:[m# Example[1;31m env[mironment file for water_delivery_crm
+[32m2[m[36m:[m# Copy this to [1;31m.env[m and fill values before running locally or with docker
+[32m23[m[36m:[m# Copy this file to `[1;31m.env[m` and fill values with your real secrets.
+[32m24[m[36m:[m# Do NOT commit the real `[1;31m.env[m` file to version control.
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:.github/copilot-instructions.md[m
+[32m8[m[36m:[m- `water_delivery_crm/settings.py`:[1;31m env[m-driven configuration (loads `[1;31m.env[m`), important keys: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_MODE`, `TELEGRAM_ADMIN_CHAT_IDS`, `DATABASES`, timezone and language.
+[32m26[m[36m:[m  - Create [1;31mvenv[m and install: `python -m [1;31mvenv[m .[1;31mvenv[m` then `& .\\.[1;31mvenv[m\\Scripts\\Activate.ps1; pip install -r requirements.txt` (PowerShell).
+[32m27[m[36m:[m  - Create `[1;31m.env[m` at the project root (settings reads it). Set: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_MODE=polling`, `TELEGRAM_ADMIN_CHAT_IDS=12345,67890`.
+[32m45[m[36m:[m- Telegram admin IDs: stored in `TELEGRAM_ADMIN_CHAT_IDS` as comma-separated ints in the[1;31m env[m and converted in settings.
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:.gitignore[m
+[32m3[m[36m:[m[1;31m.env[m
+[32m6[m[36m:[m# Virtual[1;31m env[mironments
+[32m7[m[36m:[m.[1;31mvenv[m/
+[32m8[m[36m:[m[1;31mvenv[m/
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:README_INSTALLER.md[m
+[32m5[m[36m:[m- `scripts/install_local.ps1` — a PowerShell installer that prepares a Python virtual[1;31m env[mironment, installs dependencies and creates `run_server.bat` and `run_bot.bat` launchers. Use this when you want a quick installer that runs on the target machine (requires Python installed).
+[32m15[m[36m:[m4. Edit `[1;31m.env[m` in the project root and fill `TELEGRAM_BOT_TOKEN`, `ALLOWED_HOSTS` (add your local network IPs), etc.
+[32m29[m[36m:[m4. Run the produced `.exe` on the target PC. The installer will copy files and execute `scripts\install_local.ps1` to prepare the[1;31m env[mironment.
+[32m49[m[36m:[m1. Download a portable copy of Python (a full distribution that includes `python.exe`, `pip` and `[1;31mvenv[m`).
+[32m50[m[36m:[m    - The official Windows embeddable ZIP is minimal and may lack `[1;31mvenv[m`/`pip`. For best results use a full portable distribution
+[32m58[m[36m:[m- During installation `scripts\install_local.ps1` will detect `embedded_python\python.exe` and use it to create the `.[1;31mvenv[m` and
+[32m62[m[36m:[m- The portable Python you include must provide `python.exe` and support `-m [1;31mvenv[m` and `-m pip` (a minimal embeddable ZIP from python.org
+[32m63[m[36m:[m   may not have these). If you are unsure, test the portable Python locally by running `embedded_python\python.exe -m [1;31mvenv[m .[1;31mvenv[m`.
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:README_TELEGRAM.md[m
+[32m5[m[36m:[mОтредактируйте файл `[1;31m.env[m` (уже существует):
+[32m7[m[36m:[m``[1;31m`env[m
+[32m8[m[36m:[m# Fill these values in your local `[1;31m.env[m` (do NOT commit `[1;31m.env[m`)
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:TELEGRAM_BOT_GUIDE.md[m
+[32m15[m[36m:[mСкопируйте `[1;31m.env[m.example` в `[1;31m.env[m` и заполните необходимые данные:
+[32m18[m[36m:[mcp [1;31m.env[m.example [1;31m.env[m
+[32m21[m[36m:[mОтредактируйте `[1;31m.env[m`:
+[32m22[m[36m:[m``[1;31m`env[m
+[32m197[m[36m:[mДля получения уведомлений добавьте ваш chat_id в `[1;31m.env[m`:
+[32m198[m[36m:[m``[1;31m`env[m
+[32m230[m[36m:[m2. Проверьте токен в `[1;31m.env[m`
+[32m236[m[36m:[m2. Проверьте настройки TELEGRAM_ADMIN_CHAT_IDS в `[1;31m.env[m`
+[32m269[m[36m:[m- ⚠️ Никогда не коммитьте файл `[1;31m.env[m` в Git
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:crm/management/commands/run_telegram_bot.py[m
+[32m17[m[36m:[m            self.stdout.write(self.style.ERROR('TELEGRAM_BOT_TOKEN is not set. Provide --token or set in [1;31m.env[m/settings.'))
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:docker-compose.yml[m
+[32m5[m[36m:[m   [1;31m env[m_file: [1;31m.env[m
+[32m6[m[36m:[m   [1;31m env[mironment:
+[32m18[m[36m:[m   [1;31m env[m_file: [1;31m.env[m
+[32m19[m[36m:[m   [1;31m env[mironment:
+[32m28[m[36m:[m   [1;31m env[mironment:
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:docker/entrypoint.sh[m
+[32m1[m[36m:[m#!/usr/bin[1;31m/env[m bash
+[32m7[m[36m:[mif [ ! -f [1;31m.env[m ] && [ -f [1;31m.env[m.example ]; then
+[32m8[m[36m:[m  cp [1;31m.env[m.example [1;31m.env[m
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:installers/water_delivery_installer.iss[m
+[32m12[m[36m:[mSource: "{#ProjectDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs; Excludes: "\.git\*;dist\*;\.[1;31mvenv[m\*;node_modules\*"
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:manage.py[m
+[32m1[m[36m:[m#!/usr/bin[1;31m/env[m python
+[32m9[m[36m:[m    os[1;31m.env[miron.setdefault('DJANGO_SETTINGS_MODULE', 'water_delivery_crm.settings')
+[32m15[m[36m:[m            "available on your PYTHONPATH[1;31m env[mironment variable? Did you "
+[32m16[m[36m:[m            "forget to activate a virtual[1;31m env[mironment?"
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:requirements.txt[m
+[32m2[m[36m:[mpython-do[1;31mtenv[m>=1.0
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:run_bot.bat[m
+[32m3[m[36m:[mpowershell -NoProfile -ExecutionPolicy Bypass -Command "& { .\.[1;31mvenv[m\Scripts\Activate.ps1; python -c \"from crm.telegram_bot import create_application; create_application().run_polling()\" }"
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:run_server.bat[m
+[32m3[m[36m:[mpowershell -NoProfile -ExecutionPolicy Bypass -Command "& { .\.[1;31mvenv[m\Scripts\Activate.ps1; python manage.py runserver 0.0.0.0:8000 }"
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:scripts/build_exe.ps1[m
+[32m2[m[36m:[m    [string]$[1;31mVenv[mPath = '.\.[1;31mvenv[m',
+[32m14[m[36m:[m$[1;31mvenv[mPython = Join-Path $root $[1;31mVenv[mPath
+[32m15[m[36m:[mif (-not (Test-Path $[1;31mvenv[mPython)) {
+[32m16[m[36m:[m    Write-Err "Virtua[1;31mlenv[m not found at $[1;31mVenv[mPath. Activate your [1;31mvenv[m or create one before running this script."
+[32m20[m[36m:[m$pythonExe = Join-Path $[1;31mvenv[mPython 'Scripts\python.exe'
+[32m26[m[36m:[mWrite-Info "Installing PyInstaller into [1;31mvenv[m..."
+[32m42[m[36m:[m    --add-data "[1;31m.env[m;." `
+[32m54[m[36m:[m    --add-data "[1;31m.env[m;." `
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:scripts/fetch_portable_python.ps1[m
+[32m7[m[36m:[minstallation that the installer scripts will use to create the virtua[1;31mlenv[m.
+[32m13[m[36m:[m- Test the resulting `embedded_python\python.exe -m [1;31mvenv[m .[1;31mvenv[m_test` locally
+[32m14[m[36m:[m  to confirm the portable install includes `[1;31mvenv[m` and `pip`.
+[32m48[m[36m:[m$tmpInstaller = Join-Path [1;31m$env[m:TEMP $installerName
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:scripts/install_local.ps1[m
+[32m5[m[36m:[m- Creates a virtual[1;31m env[mironment `.[1;31mvenv[m` in the project root
+[32m7[m[36m:[m- Copies `[1;31m.env[m.example` -> `[1;31m.env[m` if `[1;31m.env[m` missing
+[32m30[m[36m:[m    Write-Info "Bundled Python detected at $bundledPython. Will use bundled Python to create [1;31mvenv[m."
+[32m40[m[36m:[mif (-not (Test-Path ".[1;31mvenv[m")) {
+[32m41[m[36m:[m    Write-Info "Creating virtual[1;31m env[mironment .[1;31mvenv[m using $pythonCmd ..."
+[32m42[m[36m:[m    & $pythonCmd -m [1;31mvenv[m .[1;31mvenv[m
+[32m44[m[36m:[m    Write-Info "Virtual[1;31m env[mironment already exists (.[1;31mvenv[m)"
+[32m47[m[36m:[mWrite-Info "Activating virtual[1;31m env[mironment and installing requirements..."
+[32m48[m[36m:[m& .\.[1;31mvenv[m\Scripts\python.exe -m pip install --upgrade pip
+[32m49[m[36m:[m& .\.[1;31mvenv[m\Scripts\python.exe -m pip install -r requirements.txt
+[32m51[m[36m:[mif (-not (Test-Path "[1;31m.env[m")) {
+[32m52[m[36m:[m    if (Test-Path "[1;31m.env[m.example") {
+[32m53[m[36m:[m        Copy-Item [1;31m.env[m.example [1;31m.env[m
+[32m54[m[36m:[m        Write-Info "[1;31m.env[m created from [1;31m.env[m.example — please edit and fill TELEGRAM_BOT_TOKEN and ALLOWED_HOSTS"
+[32m61[m[36m:[m"@ | Out-File -Encoding utf8 [1;31m.env[m
+[32m62[m[36m:[m        Write-Info "Minimal [1;31m.env[m created — please edit it and fill TELEGRAM_BOT_TOKEN"
+[32m65[m[36m:[m    Write-Info "[1;31m.env[m already exists — leaving as is"
+[32m75[m[36m:[m               "powershell -NoProfile -ExecutionPolicy Bypass -Command \"& { .\\.[1;31mvenv[m\\Scripts\\Activate.ps1; $command }\""
+[32m104[m[36m:[mWrite-Info "Installer finished. Edit [1;31m.env[m and then run .\\run_server.bat to start the app."
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:scripts/pyinstaller/bot_run.py[m
+[32m12[m[36m:[m    os[1;31m.env[miron.setdefault('DJANGO_SETTINGS_MODULE', 'water_delivery_crm.settings')
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:scripts/pyinstaller/server_run.py[m
+[32m12[m[36m:[m    os[1;31m.env[miron.setdefault('DJANGO_SETTINGS_MODULE', 'water_delivery_crm.settings')
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:water_delivery_bot.spec[m
+[32m8[m[36m:[m    datas=[('templates', 'templates'), ('static', 'static'), ('[1;31m.env[m', '.'), ('media', 'media')],
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:water_delivery_crm/asgi.py[m
+[32m14[m[36m:[mos[1;31m.env[miron.setdefault('DJANGO_SETTINGS_MODULE', 'water_delivery_crm.settings')
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:water_delivery_crm/settings.py[m
+[32m15[m[36m:[mfrom do[1;31mtenv[m import load_do[1;31mtenv[m
+[32m21[m[36m:[m# Load local[1;31m env[mironment variables (see [1;31m.env[m.example)
+[32m22[m[36m:[menv_path = BASE_DIR / '[1;31m.env[m'
+[32m23[m[36m:[mif[1;31m env[m_path.exists():
+[32m24[m[36m:[m    load_do[1;31mtenv[m[1;31m(env[m_path)
+[32m30[m[36m:[mSECRET_KEY = os[1;31m.env[miron.get('DJANGO_SECRET_KEY', 'django-insecure-your-secret-key-here')
+[32m33[m[36m:[mDEBUG = os[1;31m.env[miron.get('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes')
+[32m35[m[36m:[m# Hosts (comma-separated in[1;31m env[m, e.g. "example.com,localhost")
+[32m36[m[36m:[mraw_allowed = os[1;31m.env[miron.get('ALLOWED_HOSTS', '')
+[32m93[m[36m:[m# If a DATABASE_URL[1;31m env[m var is provided (e.g. postgres://user:pass@host:port/dbname)
+[32m95[m[36m:[mDATABASE_URL = os[1;31m.env[miron.get('DATABASE_URL')
+[32m164[m[36m:[mEMAIL_BACKEND = os[1;31m.env[miron.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+[32m165[m[36m:[mEMAIL_HOST = os[1;31m.env[miron.get('EMAIL_HOST', 'smtp.gmail.com')
+[32m166[m[36m:[mEMAIL_PORT = int(os[1;31m.env[miron.get('EMAIL_PORT', '587'))
+[32m167[m[36m:[mEMAIL_USE_TLS = os[1;31m.env[miron.get('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes')
+[32m168[m[36m:[mEMAIL_HOST_USER = os[1;31m.env[miron.get('EMAIL_HOST_USER', '')
+[32m169[m[36m:[mEMAIL_HOST_PASSWORD = os[1;31m.env[miron.get('EMAIL_HOST_PASSWORD', '')
+[32m170[m[36m:[mDEFAULT_FROM_EMAIL = os[1;31m.env[miron.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or '')
+[32m172[m[36m:[m# Telegram bot configuration (read token from[1;31m env[mironment)
+[32m173[m[36m:[mTELEGRAM_BOT_TOKEN = os[1;31m.env[miron.get('TELEGRAM_BOT_TOKEN', '')
+[32m174[m[36m:[mTELEGRAM_MODE = os[1;31m.env[miron.get('TELEGRAM_MODE', 'polling')
+[32m178[m[36m:[m    int(id.strip()) for id in os[1;31m.env[miron.get('TELEGRAM_ADMIN_CHAT_IDS', '').split(',') if id.strip()
+[32m182[m[36m:[mDRIVER_CODE_EXPIRY_HOURS = int(os[1;31m.env[miron.get('DRIVER_CODE_EXPIRY_HOURS', '24'))
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:water_delivery_crm/wsgi.py[m
+[32m14[m[36m:[mos[1;31m.env[miron.setdefault('DJANGO_SETTINGS_MODULE', 'water_delivery_crm.settings')
+
+[35m5f06c7526e473ecf708f5becffda0deeea48be2e:water_delivery_server.spec[m
+[32m8[m[36m:[m    datas=[('templates', 'templates'), ('static', 'static'), ('[1;31m.env[m', '.'), ('media', 'media')],
